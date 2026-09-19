@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎴 Flashcards - Cuentas Contables</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 25px 30px;
+    text-align: center;
+  }
+
+  .header h1 { font-size: 2em; margin-bottom: 8px; }
+  .header p { opacity: 0.9; font-size: 1em; }
+
+  .controls {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .mode-selector {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+
+  .mode-btn {
+    padding: 10px 20px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+  }
+
+  .mode-btn:hover {
+    background: #f0f4ff;
+    transform: translateY(-2px);
+  }
+
+  .mode-btn.active {
+    background: linear-gradient(135deg, #2a5298, #1e3c72);
+    color: white;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+  }
+
+  .filter-chip {
+    padding: 6px 14px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.3s ease;
+    color: #555;
+  }
+
+  .filter-chip:hover { border-color: #2a5298; }
+  .filter-chip.active { background: #2a5298; color: white; border-color: #2a5298; }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    padding: 8px 18px;
+    border: none;
+    background: #6c757d;
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .action-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+  .action-btn.shuffle { background: linear-gradient(135deg, #f093fb, #f5576c); }
+  .action-btn.reset { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+  /* Stats */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 15px 30px;
+    background: white;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 10px;
+  }
+
+  .stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2a5298;
+  }
+
+  .stat-value.correct { color: #28a745; }
+  .stat-value.incorrect { color: #dc3545; }
+
+  .stat-label {
+    font-size: 0.75em;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Flashcard Area */
+  .flashcard-area {
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 500px;
+  }
+
+  .card-counter {
+    margin-bottom: 20px;
+    font-size: 1em;
+    color: #666;
+    font-weight: bold;
+  }
+
+  .flashcard-wrapper {
+    width: 100%;
+    max-width: 550px;
+    height: 380px;
+    perspective: 1500px;
+    margin-bottom: 25px;
+  }
+
+  .flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .flashcard.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    text-align: center;
+    overflow-y: auto;
+  }
+
+  .card-front {
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border: 3px solid #2a5298;
+  }
+
+  .card-back {
+    background: linear-gradient(135deg, #fff5e6, #ffe8cc);
+    border: 3px solid #ff6b35;
+    transform: rotateY(180deg);
+  }
+
+  .card-front .icon {
+    font-size: 5em;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+  }
+
+  .card-front .account-name {
+    font-size: 1.8em;
+    color: #1e3c72;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  .card-front .category-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 15px;
+  }
+
+  .cat-activo-circulante { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .cat-activo-fijo { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+  .cat-activo-diferido { background: linear-gradient(135deg, #f2994a, #f2c94c); }
+  .cat-pasivo-circulante { background: linear-gradient(135deg, #eb3349, #f45c43); }
+  .cat-pasivo-largo-plazo { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+
+  .card-front .flip-hint {
+    font-size: 0.85em;
+    color: #999;
+    margin-top: 15px;
+    font-style: italic;
+  }
+
+  /* Back content */
+  .card-back .back-content {
+    width: 100%;
+    text-align: left;
+  }
+
+  .card-back h3 {
+    color: #c1272d;
+    margin-bottom: 12px;
+    font-size: 1.3em;
+    border-bottom: 2px solid #ff6b35;
+    padding-bottom: 8px;
+  }
+
+  .card-back .definition {
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 8px;
+    border-left: 3px solid #ff6b35;
+  }
+
+  .card-back .movements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .movement-box {
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8em;
+  }
+
+  .movement-box.aumenta {
+    background: #d4edda;
+    border-left: 3px solid #28a745;
+  }
+
+  .movement-box.disminuye {
+    background: #f8d7da;
+    border-left: 3px solid #dc3545;
+  }
+
+  .movement-box strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.9em;
+  }
+
+  .movement-box.aumenta strong { color: #155724; }
+  .movement-box.disminuye strong { color: #721c24; }
+
+  .card-back .rule {
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    color: #856404;
+    font-weight: bold;
+  }
+
+  /* Navigation */
+  .navigation {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    background: linear-gradient(135deg, #2a5298, #1e3c72);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(42,82,152,0.4);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .nav-btn.flip {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+  }
+
+  /* Exam mode */
+  .exam-buttons {
+    display: none;
+    gap: 15px;
+    margin-top: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .exam-buttons.show {
+    display: flex;
+  }
+
+  .exam-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    color: white;
+  }
+
+  .exam-btn.correct { background: linear-gradient(135deg, #28a745, #20c997); }
+  .exam-btn.incorrect { background: linear-gradient(135deg, #dc3545, #e74c3c); }
+
+  .exam-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+
+  /* Progress bar */
+  .progress-container {
+    background: #e0e0e0;
+    height: 8px;
+    border-radius: 4px;
+    margin: 15px 30px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    background: linear-gradient(90deg, #28a745, #20c997);
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 4px;
+  }
+
+  /* Completion modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    animation: slideUp 0.5s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal .trophy { font-size: 5em; margin-bottom: 15px; }
+  .modal h2 { color: #2a5298; margin-bottom: 15px; }
+  .modal .score {
+    font-size: 3em;
+    font-weight: bold;
+    color: #28a745;
+    margin: 20px 0;
+  }
+  .modal .score.low { color: #dc3545; }
+  .modal .score.medium { color: #ffc107; }
+  .modal p { color: #666; margin-bottom: 20px; line-height: 1.6; }
+
+  .keyboard-hint {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 20px;
+    font-size: 0.85em;
+    color: #666;
+    text-align: center;
+  }
+
+  .keyboard-hint kbd {
+    background: #333;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    margin: 0 2px;
+  }
+
+  @media (max-width: 768px) {
+    .header h1 { font-size: 1.5em; }
+    .flashcard-wrapper { height: 450px; }
+    .card-front .account-name { font-size: 1.4em; }
+    .card-front .icon { font-size: 4em; }
+    .card-back .movements { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎴 Flashcards Contables</h1>
+    <p>Memoriza las 35 cuentas del Activo y Pasivo</p>
+  </div>
+
+  <div class="controls">
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="study">📚 Modo Estudio</button>
+      <button class="mode-btn" data-mode="exam">🎯 Modo Examen</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-chip active" data-filter="all">Todas (35)</button>
+      <button class="filter-chip" data-filter="activo-circulante">💵 Activo Circ. (9)</button>
+      <button class="filter-chip" data-filter="activo-fijo">🏠 Activo Fijo (7)</button>
+      <button class="filter-chip" data-filter="activo-diferido">📊 Activo Dif. (10)</button>
+      <button class="filter-chip" data-filter="pasivo-circulante">🔥 Pasivo Circ. (6)</button>
+      <button class="filter-chip" data-filter="pasivo-largo-plazo">🏦 Pasivo L.P. (3)</button>
+    </div>
+    <div class="action-row">
+      <button class="action-btn shuffle" onclick="shuffleCards()">🔀 Barajar</button>
+      <button class="action-btn reset" onclick="resetCards()">🔄 Reiniciar</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-value" id="currentCard">1</div>
+      <div class="stat-label">Actual</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="totalCards">35</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value correct" id="correctCount">0</div>
+      <div class="stat-label">Correctas</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value incorrect" id="incorrectCount">0</div>
+      <div class="stat-label">Incorrectas</div>
+    </div>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="flashcard-area">
+    <div class="card-counter" id="cardCounter">Tarjeta 1 de 35</div>
+    
+    <div class="flashcard-wrapper">
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <div class="card-face card-front" id="cardFront">
+          <div class="icon" id="cardIcon">💵</div>
+          <div class="account-name" id="cardName">Caja</div>
+          <div class="category-badge cat-activo-circulante" id="cardCategory">Activo Circulante</div>
+          <div class="flip-hint">👆 Haz clic para ver la información</div>
+        </div>
+        <div class="card-face card-back" id="cardBack">
+          <div class="back-content">
+            <h3 id="backTitle">Definición</h3>
+            <div class="definition" id="cardDefinition"></div>
+            <div class="movements">
+              <div class="movement-box aumenta">
+                <strong>📈 Aumenta por:</strong>
+                <span id="cardAumenta"></span>
+              </div>
+              <div class="movement-box disminuye">
+                <strong>📉 Disminuye por:</strong>
+                <span id="cardDisminuye"></span>
+              </div>
+            </div>
+            <div class="rule" id="cardRule"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="navigation">
+      <button class="nav-btn" id="prevBtn" onclick="prevCard()">← Anterior</button>
+      <button class="nav-btn flip" onclick="flipCard()">🔄 Voltear</button>
+      <button class="nav-btn" id="nextBtn" onclick="nextCard()">Siguiente →</button>
+    </div>
+
+    <div class="exam-buttons" id="examButtons">
+      <button class="exam-btn correct" onclick="markAnswer(true)">✓ La sabía</button>
+      <button class="exam-btn incorrect" onclick="markAnswer(false)">✗ No la sabía</button>
+    </div>
+
+    <div class="keyboard-hint">
+      💡 <kbd>←</kbd> <kbd>→</kbd> navegar · <kbd>Espacio</kbd> voltear · <kbd>1</kbd> sabía · <kbd>2</kbd> no sabía
+    </div>
+  </div>
+</div>
+
+<!-- Modal de finalización -->
+<div class="modal-overlay" id="completionModal">
+  <div class="modal">
+    <div class="trophy">🏆</div>
+    <h2 id="modalTitle">¡Completaste el repaso!</h2>
+    <div class="score" id="modalScore">0/0</div>
+    <p id="modalMessage"></p>
+    <button class="nav-btn" onclick="closeModal()">Continuar estudiando</button>
+  </div>
+</div>
+
+<script>
+const allCards = [
+  // ACTIVO CIRCULANTE
+  { name: 'Caja', icon: '💵', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Dinero en efectivo propiedad de la empresa: monedas, billetes, cheques, vouchers de tarjetas, giros postales y bancarios.',
+    aumenta: 'Recibir dinero en efectivo', disminuye: 'Pagar con efectivo',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Fondo Fijo de Caja Chica', icon: '🪙', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Dinero en efectivo para pagos menores. La LISR establece que no debe exceder $2,000.00.',
+    aumenta: 'Cuando el fondo se incrementa', disminuye: 'Cuando el fondo se reduce',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Bancos', icon: '🏦', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Valor de los depósitos en instituciones bancarias a favor de la entidad.',
+    aumenta: 'Depositar dinero o valores', disminuye: 'Expedir cheques o transferencias',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Inversiones Temporales', icon: '📊', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Acciones y valores de inmediata realización para obtener rendimiento a corto plazo.',
+    aumenta: 'Adquirir acciones, bonos, CETES', disminuye: 'Venderlos',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Mercancías', icon: '🌮', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Valores que se hacen objeto de compra o venta. Es cuenta mixta durante el ejercicio.',
+    aumenta: 'Comprar mercancías o recibir devoluciones', disminuye: 'Vender o devolver mercancías',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Clientes', icon: '👥', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Entidades que deben a la empresa por ventas de mercancías a crédito sin garantía documental.',
+    aumenta: 'Vender mercancías a crédito', disminuye: 'Cobrar, recibir devoluciones o descuentos',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Documentos por Cobrar', icon: '📄', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Títulos de crédito a favor de la entidad: letras de cambio y pagarés.',
+    aumenta: 'Recibir letras o pagarés', disminuye: 'Cobrar, endosar o cancelar',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Deudores Diversos', icon: '🤝', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Entidades que deben por conceptos distintos a venta de mercancías.',
+    aumenta: 'Adeudos por otros conceptos', disminuye: 'Pagar o devolver valores',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Anticipo a Proveedores', icon: '💰', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Valor del anticipo a cuenta de pedidos entregado a proveedores para asegurar suministro.',
+    aumenta: 'Efectuar anticipos', disminuye: 'Amortizar al recibir el pedido',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+
+  // ACTIVO FIJO
+  { name: 'Terrenos', icon: '🏞️', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Predios propiedad de la entidad.',
+    aumenta: 'Comprar un terreno', disminuye: 'Vender o dar de baja',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Edificios', icon: '🏢', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Propiedades fijas: locales comerciales, bodegas, estacionamientos.',
+    aumenta: 'Comprar un edificio', disminuye: 'Vender o dar de baja',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Mobiliario y Equipo', icon: '🪑', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Muebles y utensilios: escritorios, sillas, mesas, básculas, máquinas de oficina.',
+    aumenta: 'Comprar estos bienes', disminuye: 'Vender o dar de baja',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Equipo de Cómputo', icon: '💻', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'CPU, monitores, teclados, impresoras, scanners, plotters.',
+    aumenta: 'Comprar equipo de cómputo', disminuye: 'Vender o dar de baja',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Equipo de Entrega', icon: '🛵', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Vehículos de transporte: camiones, camionetas, motocicletas, barcos, aviones.',
+    aumenta: 'Comprar un vehículo', disminuye: 'Vender o dar de baja',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Depósitos en Garantía', icon: '🔐', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Cantidades dejadas en guarda para garantizar valores o servicios (ej. arrendamiento).',
+    aumenta: 'Dejar dinero en guarda', disminuye: 'Recibir devolución al terminar contrato',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Inversiones Permanentes', icon: '📈', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Acciones y valores convertibles en efectivo en plazo mayor a un año.',
+    aumenta: 'Adquirir acciones y valores', disminuye: 'Venderlos',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+
+  // ACTIVO DIFERIDO
+  { name: 'Gastos de I+D', icon: '🔬', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos en creación de nuevos productos, procesos o servicios con expectativa de comercializarlos.',
+    aumenta: 'Efectuar gastos de I+D', disminuye: 'Aplicación a resultados',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Gastos Preoperativos', icon: '🚀', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos durante etapa preoperatoria: adquirir equipos, organizar, capacitar personal.',
+    aumenta: 'Efectuar gastos preoperatorios', disminuye: 'Amortización al iniciar operaciones',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Gastos de Mercadotecnia', icon: '🎯', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos para conocer el mercado, crear marcas, publicidad y promociones.',
+    aumenta: 'Efectuar gastos de mercadotecnia', disminuye: 'Aplicación a resultados y amortización',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Gastos de Organización', icon: '📋', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Pagos a profesionales especializados en organización o reorganización de empresas.',
+    aumenta: 'Pagar servicios de organización', disminuye: 'Aplicación a resultados',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Gastos de Instalación', icon: '🔧', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos para acondicionar el local del negocio y darle presentación.',
+    aumenta: 'Acondicionar el local', disminuye: 'Amortización por uso o tiempo',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Papelería y Útiles', icon: '📝', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Material de papelería y objetos de escritorio: papel, bolígrafos, tintas, etc.',
+    aumenta: 'Comprar papelería', disminuye: 'Uso de materiales (se convierte en gasto)',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Propaganda y Publicidad', icon: '📢', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Medios para dar a conocer actividad, servicio o producto: folletos, anuncios.',
+    aumenta: 'Pagar impresión o contratación', disminuye: 'Distribución o publicación',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Primas de Seguros', icon: '🛡️', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Pagos a aseguradoras para asegurar bienes contra incendios, robos, riesgos.',
+    aumenta: 'Pagar primas de seguro', disminuye: 'Servicio disfrutado (se convierte en gasto)',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Rentas Pagadas por Anticipado', icon: '🏢', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Rentas mensuales, semestrales o anuales pagadas antes de su vencimiento.',
+    aumenta: 'Pagar rentas por anticipado', disminuye: 'Tiempo transcurrido (se convierte en gasto)',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+  { name: 'Intereses Pagados por Anticipado', icon: '💸', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Intereses pagados antes del vencimiento de un crédito (descontados del préstamo).',
+    aumenta: 'Pagar intereses por anticipado', disminuye: 'Tiempo transcurrido (se convierte en gasto)',
+    rule: 'ACTIVO: aumenta por CARGO, disminuye por ABONO' },
+
+  // PASIVO CIRCULANTE
+  { name: 'Proveedores', icon: '🥩', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Entidades a quienes se debe por compras de mercancías a crédito sin garantía documental.',
+    aumenta: 'Comprar mercancías a crédito', disminuye: 'Pagar, devolver mercancías o descuentos',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Documentos por Pagar', icon: '📝', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Títulos de crédito a cargo de la empresa: letras de cambio y pagarés.',
+    aumenta: 'Expedir letras o pagarés', disminuye: 'Pagar o cancelar documentos',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Acreedores Diversos', icon: '👩‍👧', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Entidades a quienes se debe por conceptos distintos a compra de mercancías.',
+    aumenta: 'Adeudos por otros conceptos', disminuye: 'Pagar o devolver valores',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Anticipo de Clientes', icon: '🎉', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Valor del anticipo recibido de clientes a cuenta de futuras ventas.',
+    aumenta: 'Recibir anticipos', disminuye: 'Entregar pedido o devolver anticipo',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Gastos Pendientes de Pago', icon: '💡', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Gastos por servicios devengados pendientes: sueldos, luz, agua, renta, etc.',
+    aumenta: 'No pagar servicio devengado', disminuye: 'Pagar el adeudo',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Impuestos Pendientes de Pago', icon: '🏛️', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Impuestos devengados pendientes: IMSS, SAR, INFONAVIT, nóminas, predial.',
+    aumenta: 'Conocer obligación fiscal', disminuye: 'Pagar el adeudo',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+
+  // PASIVO LARGO PLAZO
+  { name: 'Acreedores Hipotecarios', icon: '🏠', category: 'pasivo-largo-plazo', categoryLabel: 'Pasivo a Largo Plazo',
+    definition: 'Obligaciones con garantía de escritura de bienes inmuebles (terrenos y edificios).',
+    aumenta: 'Recibir préstamo hipotecario', disminuye: 'Pagar el préstamo',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Rentas Cobradas por Anticipado', icon: '📅', category: 'pasivo-largo-plazo', categoryLabel: 'Pasivo a Largo Plazo',
+    definition: 'Rentas cobradas anticipadamente aún no vencidas.',
+    aumenta: 'Cobrar rentas por anticipado', disminuye: 'Tiempo transcurrido (se convierte en ingreso)',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' },
+  { name: 'Intereses Cobrados por Anticipado', icon: '💹', category: 'pasivo-largo-plazo', categoryLabel: 'Pasivo a Largo Plazo',
+    definition: 'Intereses cobrados anticipadamente aún no vencidos.',
+    aumenta: 'Cobrar intereses por anticipado', disminuye: 'Tiempo transcurrido (se convierte en ingreso)',
+    rule: 'PASIVO: aumenta por ABONO, disminuye por CARGO' }
+];
+
+let cards = [...allCards];
+let currentIndex = 0;
+let currentMode = 'study';
+let currentFilter = 'all';
+let correctAnswers = 0;
+let incorrectAnswers = 0;
+let isFlipped = false;
+
+function renderCard() {
+  if (cards.length === 0) return;
+  
+  const card = cards[currentIndex];
+  const flashcard = document.getElementById('flashcard');
+  
+  // Reset flip
+  flashcard.classList.remove('flipped');
+  isFlipped = false;
+  
+  // Front
+  document.getElementById('cardIcon').textContent = card.icon;
+  document.getElementById('cardName').textContent = card.name;
+  const categoryBadge = document.getElementById('cardCategory');
+  categoryBadge.textContent = card.categoryLabel;
+  categoryBadge.className = 'category-badge cat-' + card.category;
+  
+  // Back
+  document.getElementById('cardDefinition').textContent = card.definition;
+  document.getElementById('cardAumenta').textContent = card.aumenta;
+  document.getElementById('cardDisminuye').textContent = card.disminuye;
+  document.getElementById('cardRule').textContent = card.rule;
+  
+  // Counter
+  document.getElementById('currentCard').textContent = currentIndex + 1;
+  document.getElementById('totalCards').textContent = cards.length;
+  document.getElementById('cardCounter').textContent = `Tarjeta ${currentIndex + 1} de ${cards.length}`;
+  
+  // Navigation
+  document.getElementById('prevBtn').disabled = currentIndex === 0;
+  document.getElementById('nextBtn').disabled = currentIndex === cards.length - 1;
+  
+  // Progress
+  const progress = ((currentIndex + 1) / cards.length) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
+  
+  // Exam buttons visibility
+  const examButtons = document.getElementById('examButtons');
+  if (currentMode === 'exam' && isFlipped) {
+    examButtons.classList.add('show');
+  } else {
+    examButtons.classList.remove('show');
+  }
+}
+
+function flipCard() {
+  const flashcard = document.getElementById('flashcard');
+  flashcard.classList.toggle('flipped');
+  isFlipped = flashcard.classList.contains('flipped');
+  
+  const examButtons = document.getElementById('examButtons');
+  if (currentMode === 'exam' && isFlipped) {
+    examButtons.classList.add('show');
+  } else {
+    examButtons.classList.remove('show');
+  }
+}
+
+function nextCard() {
+  if (currentIndex < cards.length - 1) {
+    currentIndex++;
+    renderCard();
+  } else if (currentMode === 'exam' && (correctAnswers + incorrectAnswers) === cards.length) {
+    showCompletionModal();
+  }
+}
+
+function prevCard() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderCard();
+  }
+}
+
+function markAnswer(correct) {
+  if (correct) {
+    correctAnswers++;
+  } else {
+    incorrectAnswers++;
+  }
+  document.getElementById('correctCount').textContent = correctAnswers;
+  document.getElementById('incorrectCount').textContent = incorrectAnswers;
+  
+  if (currentIndex < cards.length - 1) {
+    nextCard();
+  } else {
+    showCompletionModal();
+  }
+}
+
+function showCompletionModal() {
+  const modal = document.getElementById('completionModal');
+  const total = correctAnswers + incorrectAnswers;
+  const percentage = total > 0 ? (correctAnswers / total) * 100 : 0;
+  
+  const scoreEl = document.getElementById('modalScore');
+  scoreEl.textContent = `${correctAnswers}/${total}`;
+  scoreEl.className = 'score';
+  
+  let title, message;
+  if (percentage >= 90) {
+    title = '¡Excelente! 🎉';
+    message = 'Dominas perfectamente las cuentas contables. ¡Sigue así!';
+  } else if (percentage >= 70) {
+    title = '¡Muy bien! 👏';
+    message = 'Tienes un buen dominio. Repasa las que fallaste para perfeccionarte.';
+  } else if (percentage >= 50) {
+    title = '¡Buen esfuerzo! 💪';
+    message = 'Vas por buen camino. Repasa las tarjetas marcadas como "no sabía".';
+    scoreEl.classList.add('medium');
+  } else {
+    title = '¡Sigue practicando! 📚';
+    message = 'Te recomendamos repasar el capítulo y volver a intentar el examen.';
+    scoreEl.classList.add('low');
+  }
+  
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMessage').textContent = message;
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('completionModal').classList.remove('show');
+}
+
+function shuffleCards() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  currentIndex = 0;
+  correctAnswers = 0;
+  incorrectAnswers = 0;
+  document.getElementById('correctCount').textContent = 0;
+  document.getElementById('incorrectCount').textContent = 0;
+  renderCard();
+}
+
+function resetCards() {
+  applyFilter(currentFilter);
+  currentIndex = 0;
+  correctAnswers = 0;
+  incorrectAnswers = 0;
+  document.getElementById('correctCount').textContent = 0;
+  document.getElementById('incorrectCount').textContent = 0;
+  renderCard();
+}
+
+function applyFilter(filter) {
+  currentFilter = filter;
+  if (filter === 'all') {
+    cards = [...allCards];
+  } else {
+    cards = allCards.filter(c => c.category === filter);
+  }
+  currentIndex = 0;
+}
+
+// Mode selector
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    
+    const examButtons = document.getElementById('examButtons');
+    if (currentMode === 'study') {
+      examButtons.classList.remove('show');
+    }
+    
+    // Reset stats when changing mode
+    correctAnswers = 0;
+    incorrectAnswers = 0;
+    document.getElementById('correctCount').textContent = 0;
+    document.getElementById('incorrectCount').textContent = 0;
+  });
+});
+
+// Filter chips
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    applyFilter(chip.dataset.filter);
+    renderCard();
+  });
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') { e.preventDefault(); nextCard(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); prevCard(); }
+  else if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  else if (e.key === '1' && currentMode === 'exam' && isFlipped) { markAnswer(true); }
+  else if (e.key === '2' && currentMode === 'exam' && isFlipped) { markAnswer(false); }
+});
+
+// Initialize
+renderCard();
+</script>
+</body>
+</html>

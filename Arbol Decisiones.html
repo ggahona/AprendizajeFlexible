@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌳 Árbol de Decisiones - ¿Qué cuenta uso?</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+  body {
+    background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+    color: white;
+    padding: 25px 30px;
+    text-align: center;
+  }
+
+  .header h1 { font-size: 2em; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .header p { opacity: 0.95; font-size: 1em; }
+
+  .mode-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .mode-tab {
+    flex: 1;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: none;
+    background: transparent;
+    font-size: 0.95em;
+    color: #555;
+  }
+
+  .mode-tab:hover { background: #e9ecef; }
+
+  .mode-tab.active {
+    background: linear-gradient(135deg, #134e5e, #71b280);
+    color: white;
+  }
+
+  .content-area {
+    padding: 30px;
+    min-height: 500px;
+  }
+
+  /* ASISTENTE MODE */
+  .assistant-mode { display: none; }
+  .assistant-mode.active { display: block; }
+
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    min-height: 50px;
+    align-items: center;
+  }
+
+  .breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: white;
+    border: 2px solid #71b280;
+    border-radius: 20px;
+    font-size: 0.85em;
+    color: #134e5e;
+    font-weight: 500;
+  }
+
+  .breadcrumb-item .arrow {
+    color: #999;
+    margin-left: 5px;
+  }
+
+  .question-box {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border-left: 5px solid #4caf50;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    animation: slideIn 0.5s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .question-box .question-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+  }
+
+  .question-box h3 {
+    color: #1b5e20;
+    font-size: 1.4em;
+    margin-bottom: 8px;
+  }
+
+  .question-box p {
+    color: #333;
+    font-size: 1em;
+    line-height: 1.5;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .option-btn {
+    padding: 20px;
+    background: white;
+    border: 3px solid #e0e0e0;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 1em;
+    text-align: left;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .option-btn:hover {
+    border-color: #4caf50;
+    background: #f1f8e9;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(76,175,80,0.2);
+  }
+
+  .option-btn .option-icon {
+    font-size: 1.8em;
+    flex-shrink: 0;
+  }
+
+  .option-btn .option-text {
+    flex: 1;
+  }
+
+  .option-btn .option-text strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #1b5e20;
+  }
+
+  .option-btn .option-text span {
+    font-size: 0.85em;
+    color: #666;
+    font-weight: normal;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .action-btn.back { background: #9e9e9e; color: white; }
+  .action-btn.restart { background: linear-gradient(135deg, #ff6b35, #c1272d); color: white; }
+  .action-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* RESULTADO */
+  .result-box {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 3px solid #ff9800;
+    border-radius: 20px;
+    padding: 30px;
+    animation: popIn 0.6s ease;
+    text-align: center;
+  }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .result-box .result-icon {
+    font-size: 5em;
+    margin-bottom: 15px;
+    animation: bounce 1s ease;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  .result-box h2 {
+    color: #e65100;
+    font-size: 2em;
+    margin-bottom: 10px;
+  }
+
+  .result-box .account-type {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+  }
+
+  .type-activo { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .type-pasivo { background: linear-gradient(135deg, #eb3349, #f45c43); }
+
+  .result-details {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: left;
+    margin-top: 20px;
+  }
+
+  .result-details h4 {
+    color: #e65100;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .result-details p {
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 15px;
+  }
+
+  .movement-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .movement-badge {
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .movement-badge.aumenta {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+    color: #155724;
+  }
+
+  .movement-badge.disminuye {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+  }
+
+  .movement-badge strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+  }
+
+  .example-box {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-left: 4px solid #1976d2;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+  }
+
+  .example-box strong {
+    color: #0d47a1;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  /* MAPA MODE */
+  .map-mode { display: none; }
+  .map-mode.active { display: block; }
+
+  .map-intro {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    border-left: 5px solid #4caf50;
+  }
+
+  .map-intro h3 {
+    color: #1b5e20;
+    margin-bottom: 10px;
+  }
+
+  .map-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .map-category {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border-top: 5px solid;
+  }
+
+  .map-category.activo-circulante { border-color: #38ef7d; }
+  .map-category.activo-fijo { border-color: #6dd5ed; }
+  .map-category.activo-diferido { border-color: #f2c94c; }
+  .map-category.pasivo-circulante { border-color: #f45c43; }
+  .map-category.pasivo-largo-plazo { border-color: #8e2de2; }
+
+  .map-category-header {
+    padding: 15px 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .map-category.activo-circulante .map-category-header { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .map-category.activo-fijo .map-category-header { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+  .map-category.activo-diferido .map-category-header { background: linear-gradient(135deg, #f2994a, #f2c94c); }
+  .map-category.pasivo-circulante .map-category-header { background: linear-gradient(135deg, #eb3349, #f45c43); }
+  .map-category.pasivo-largo-plazo .map-category-header { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+
+  .map-category-body {
+    padding: 15px;
+  }
+
+  .map-account {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+  }
+
+  .map-account:hover {
+    background: #e8f5e9;
+    transform: translateX(5px);
+  }
+
+  .map-account .acc-icon {
+    font-size: 1.3em;
+  }
+
+  .map-account .acc-name {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .map-account .acc-hint {
+    margin-left: auto;
+    font-size: 0.8em;
+    color: #999;
+    font-style: italic;
+  }
+
+  /* START SCREEN */
+  .start-screen {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .start-screen .big-icon {
+    font-size: 5em;
+    margin-bottom: 20px;
+    animation: bounce 2s infinite;
+  }
+
+  .start-screen h2 {
+    color: #134e5e;
+    font-size: 2em;
+    margin-bottom: 15px;
+  }
+
+  .start-screen .description {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    line-height: 1.7;
+    color: #333;
+    border-left: 5px solid #4caf50;
+  }
+
+  .start-btn {
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #134e5e, #71b280);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .start-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(19,78,94,0.4);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 30px;
+  }
+
+  .feature {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    border-top: 3px solid #71b280;
+  }
+
+  .feature-icon { font-size: 2em; margin-bottom: 8px; }
+  .feature h4 { color: #134e5e; margin-bottom: 5px; font-size: 0.95em; }
+  .feature p { color: #666; font-size: 0.85em; }
+
+  .keyboard-hint {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 20px;
+    font-size: 0.85em;
+    color: #666;
+  }
+
+  .keyboard-hint kbd {
+    background: #333;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    margin: 0 2px;
+  }
+
+  /* Modal para detalles de cuenta desde el mapa */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.4s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 25px;
+    background: linear-gradient(135deg, #134e5e, #71b280);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+    text-align: center;
+  }
+
+  .modal-header .close-btn {
+    position: absolute;
+    top: 15px; right: 15px;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    font-size: 1.3em;
+    cursor: pointer;
+  }
+
+  .modal-header .modal-icon { font-size: 3em; margin-bottom: 10px; }
+  .modal-header h2 { font-size: 1.5em; }
+
+  .modal-body { padding: 25px; }
+
+  @media (max-width: 768px) {
+    .header h1 { font-size: 1.5em; }
+    .content-area { padding: 20px; }
+    .question-box h3 { font-size: 1.2em; }
+    .movement-row { grid-template-columns: 1fr; }
+    .result-box h2 { font-size: 1.5em; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🌳 Árbol de Decisiones</h1>
+    <p>¿Qué cuenta contable debo usar? · Asistente interactivo</p>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('assistant')">🎯 Asistente</button>
+    <button class="mode-tab" onclick="switchMode('map')">🗺️ Mapa de Cuentas</button>
+  </div>
+
+  <div class="content-area">
+    <!-- MODO ASISTENTE -->
+    <div class="assistant-mode active" id="assistantMode">
+      <div id="assistantContent"></div>
+    </div>
+
+    <!-- MODO MAPA -->
+    <div class="map-mode" id="mapMode">
+      <div class="map-intro">
+        <h3>🗺️ Mapa completo de cuentas</h3>
+        <p>Haz clic en cualquier cuenta para ver su información detallada</p>
+      </div>
+      <div class="map-categories" id="mapCategories"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="close-btn" onclick="closeModal()">×</button>
+      <div class="modal-icon" id="modalIcon"></div>
+      <h2 id="modalTitle"></h2>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ==================== ÁRBOL DE DECISIONES ====================
+const decisionTree = {
+  start: {
+    question: "¿Qué tipo de operación estás registrando?",
+    icon: "🤔",
+    description: "Selecciona la categoría que mejor describe tu operación",
+    options: [
+      { text: "Operación con dinero", hint: "Efectivo, bancos, cheques", icon: "💵", next: "dinero" },
+      { text: "Compra-venta de mercancías", hint: "Inventario, clientes, proveedores", icon: "🛒", next: "mercancias" },
+      { text: "Adquisición de bienes de activo fijo", hint: "Terrenos, edificios, equipo", icon: "🏢", next: "activoFijo" },
+      { text: "Inversiones financieras", hint: "Acciones, bonos, valores", icon: "📈", next: "inversiones" },
+      { text: "Gastos pagados por anticipado", hint: "Seguros, rentas, propaganda", icon: "📅", next: "gastosDiferidos" },
+      { text: "Obligaciones y deudas", hint: "Préstamos, impuestos, anticipos", icon: "💳", next: "pasivos" },
+      { text: "Adeudos entre terceros", hint: "Préstamos, documentos", icon: "🤝", next: "adeudos" }
+    ]
+  },
+
+  dinero: {
+    question: "¿En qué forma se presenta el dinero?",
+    icon: "💵",
+    description: "Identifica la presentación específica del dinero",
+    options: [
+      { text: "Billetes y monedas en caja", hint: "Efectivo físico", icon: "💰", next: "caja" },
+      { text: "Depósito en institución bancaria", hint: "Cheques, transferencias", icon: "🏦", next: "bancos" },
+      { text: "Fondo para pagos menores", hint: "Máximo $2,000 LISR", icon: "🪙", next: "cajaChica" },
+      { text: "Vouchers de tarjetas de crédito", hint: "Se consideran efectivo", icon: "💳", next: "caja" }
+    ]
+  },
+
+  caja: {
+    result: {
+      name: "Caja",
+      icon: "💵",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Dinero en efectivo propiedad de la empresa: monedas, billetes, cheques, vouchers de tarjetas, giros postales y bancarios.",
+      aumenta: "Recibir dinero en efectivo",
+      disminuye: "Pagar con efectivo",
+      example: "Mía recibe $750 en efectivo por la venta de 30 tacos. Se carga Caja y se abona Ventas."
+    }
+  },
+
+  bancos: {
+    result: {
+      name: "Bancos",
+      icon: "🏦",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Valor de los depósitos en instituciones bancarias a favor de la entidad.",
+      aumenta: "Depositar dinero o valores al cobro",
+      disminuye: "Expedir cheques o transferencias",
+      example: "Mía deposita $3,500 en BBVA. Se carga Bancos y se abona Caja."
+    }
+  },
+
+  cajaChica: {
+    result: {
+      name: "Fondo Fijo de Caja Chica",
+      icon: "🪙",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Dinero en efectivo para pagos menores. La LISR establece que no debe exceder $2,000.00.",
+      aumenta: "Cuando el fondo se incrementa por ser insuficiente",
+      disminuye: "Cuando el fondo se reduce por ser excesivo",
+      example: "Mía constituye fondo de caja chica de $500 con cheque. Se carga Caja Chica y se abona Bancos."
+    }
+  },
+
+  mercancias: {
+    question: "¿La empresa está vendiendo o comprando mercancías?",
+    icon: "🛒",
+    description: "Define el tipo de operación con mercancías",
+    options: [
+      { text: "Vendiendo mercancías", hint: "Ingreso por ventas", icon: "💸", next: "vendiendo" },
+      { text: "Comprando mercancías", hint: "Adquisición de inventario", icon: "📦", next: "comprando" },
+      { text: "Anticipando pago a proveedor", hint: "Antes de recibir mercancía", icon: "💰", next: "anticipoProv" },
+      { text: "Recibiendo anticipo de cliente", hint: "Antes de entregar mercancía", icon: "🎉", next: "anticipoCli" }
+    ]
+  },
+
+  vendiendo: {
+    question: "¿Cómo paga el cliente?",
+    icon: "💸",
+    description: "Identifica la forma de pago del cliente",
+    options: [
+      { text: "En efectivo o cheque", hint: "Pago inmediato", icon: "💵", next: "caja" },
+      { text: "A crédito sin documento", hint: "Sin pagaré ni letra", icon: "👥", next: "clientes" },
+      { text: "Con pagaré o letra de cambio", hint: "Con garantía documental", icon: "📄", next: "docsCobrar" }
+    ]
+  },
+
+  clientes: {
+    result: {
+      name: "Clientes",
+      icon: "👥",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Entidades que deben a la empresa por ventas de mercancías a crédito sin garantía documental.",
+      aumenta: "Vender mercancías a crédito",
+      disminuye: "Cobrar, recibir devoluciones o descuentos",
+      example: "La Sra. Lupita debe $500 por 20 tacos a crédito. Se carga Clientes y se abona Ventas."
+    }
+  },
+
+  docsCobrar: {
+    result: {
+      name: "Documentos por Cobrar",
+      icon: "📄",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Títulos de crédito a favor de la entidad: letras de cambio y pagarés.",
+      aumenta: "Recibir letras o pagarés a favor",
+      disminuye: "Cobrar, endosar o cancelar documentos",
+      example: "Don Juan firma pagaré por $1,250. Se carga Documentos por Cobrar y se abona Ventas."
+    }
+  },
+
+  comprando: {
+    question: "¿Cómo paga la empresa al proveedor?",
+    icon: "📦",
+    description: "Identifica la forma de pago al proveedor",
+    options: [
+      { text: "De contado (efectivo/cheque)", hint: "Pago inmediato", icon: "💵", next: "bancos" },
+      { text: "A crédito sin documento", hint: "Sin pagaré ni letra", icon: "🥩", next: "proveedores" },
+      { text: "Con pagaré o letra de cambio", hint: "Con garantía documental", icon: "📝", next: "docsPagar" }
+    ]
+  },
+
+  proveedores: {
+    result: {
+      name: "Proveedores",
+      icon: "🥩",
+      type: "pasivo",
+      typeLabel: "Pasivo Circulante",
+      definition: "Entidades a quienes se debe por compras de mercancías a crédito sin garantía documental.",
+      aumenta: "Comprar mercancías a crédito",
+      disminuye: "Pagar, devolver mercancías o recibir descuentos",
+      example: "Mía compra $3,000 en carne a crédito a Don Pedro. Se carga Mercancías y se abona Proveedores."
+    }
+  },
+
+  docsPagar: {
+    result: {
+      name: "Documentos por Pagar",
+      icon: "📝",
+      type: "pasivo",
+      typeLabel: "Pasivo Circulante",
+      definition: "Títulos de crédito a cargo de la empresa: letras de cambio y pagarés.",
+      aumenta: "Expedir letras o pagarés a cargo",
+      disminuye: "Pagar o cancelar documentos",
+      example: "Mía firma pagaré por $15,000 por refrigerador. Se carga Mobiliario y se abona Documentos por Pagar."
+    }
+  },
+
+  anticipoProv: {
+    result: {
+      name: "Anticipo a Proveedores",
+      icon: "💰",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Valor del anticipo a cuenta de pedidos entregado a proveedores para asegurar suministro oportuno.",
+      aumenta: "Efectuar anticipos a proveedores",
+      disminuye: "Amortizar al recibir el pedido o cancelar",
+      example: "Mía anticipa $2,000 al carnicero Don Pedro. Se carga Anticipo a Proveedores y se abona Bancos."
+    }
+  },
+
+  anticipoCli: {
+    result: {
+      name: "Anticipo de Clientes",
+      icon: "🎉",
+      type: "pasivo",
+      typeLabel: "Pasivo Circulante",
+      definition: "Valor del anticipo recibido de clientes a cuenta de futuras ventas de mercancías.",
+      aumenta: "Recibir anticipos de clientes",
+      disminuye: "Entregar pedido o devolver anticipo",
+      example: "La Sra. Lupita anticipa $500 por 100 tacos. Se carga Caja y se abona Anticipo de Clientes."
+    }
+  },
+
+  activoFijo: {
+    question: "¿Qué tipo de bien de activo fijo se adquirió?",
+    icon: "🏢",
+    description: "Identifica la categoría específica del bien",
+    options: [
+      { text: "Terreno", hint: "Predios, lotes", icon: "🏞️", next: "terrenos" },
+      { text: "Edificio", hint: "Locales, bodegas", icon: "🏠", next: "edificios" },
+      { text: "Muebles y utensilios", hint: "Mesas, sillas, básculas", icon: "🪑", next: "mobiliario" },
+      { text: "Equipo de cómputo", hint: "CPU, impresoras, scanners", icon: "💻", next: "computo" },
+      { text: "Vehículos de reparto", hint: "Camiones, motos, bicis", icon: "🛵", next: "reparto" },
+      { text: "Depósito de garantía", hint: "Para arrendamiento", icon: "🔐", next: "depositos" }
+    ]
+  },
+
+  terrenos: {
+    result: {
+      name: "Terrenos",
+      icon: "🏞️",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "Predios propiedad de la entidad.",
+      aumenta: "Comprar un terreno",
+      disminuye: "Vender o dar de baja",
+      example: "Los papás de Mía compraron terreno por $450,000. Se carga Terrenos y se abona Bancos."
+    }
+  },
+
+  edificios: {
+    result: {
+      name: "Edificios",
+      icon: "🏠",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "Propiedades fijas: locales comerciales, bodegas, estacionamientos.",
+      aumenta: "Comprar un edificio",
+      disminuye: "Vender o dar de baja",
+      example: "La casa de Mía vale $800,000. Se carga Edificios y se abona Bancos."
+    }
+  },
+
+  mobiliario: {
+    result: {
+      name: "Mobiliario y Equipo",
+      icon: "🪑",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "Muebles y utensilios: escritorios, sillas, mesas, básculas, máquinas de oficina.",
+      aumenta: "Comprar estos bienes",
+      disminuye: "Vender o dar de baja",
+      example: "Mía compra mesa, sillas y báscula por $3,700. Se carga Mobiliario y se abona Bancos."
+    }
+  },
+
+  computo: {
+    result: {
+      name: "Equipo de Cómputo Electrónico",
+      icon: "💻",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "CPU, monitores, teclados, impresoras, scanners, plotters.",
+      aumenta: "Comprar equipo de cómputo",
+      disminuye: "Vender o dar de baja",
+      example: "Mía compra laptop e impresora por $14,500. Se carga Equipo de Cómputo y se abona Bancos."
+    }
+  },
+
+  reparto: {
+    result: {
+      name: "Equipo de Entrega o Reparto",
+      icon: "🛵",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "Vehículos de transporte: camiones, camionetas, motocicletas, bicicletas de carga.",
+      aumenta: "Comprar un vehículo",
+      disminuye: "Vender o dar de baja",
+      example: "Mía compra bicicleta de carga por $4,500. Se carga Equipo de Entrega y se abona Bancos."
+    }
+  },
+
+  depositos: {
+    result: {
+      name: "Depósitos en Garantía",
+      icon: "🔐",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "Cantidades dejadas en guarda para garantizar valores o servicios (ej. arrendamiento).",
+      aumenta: "Dejar dinero en guarda",
+      disminuye: "Recibir devolución al terminar contrato",
+      example: "Mía deja $3,000 de depósito al rentar local. Se carga Depósitos en Garantía y se abona Bancos."
+    }
+  },
+
+  inversiones: {
+    question: "¿Cuál es el plazo de la inversión?",
+    icon: "📈",
+    description: "Define el horizonte de tiempo de la inversión",
+    options: [
+      { text: "Corto plazo (menor a 1 año)", hint: "Inmediata realización", icon: "📊", next: "invTemporales" },
+      { text: "Largo plazo (mayor a 1 año)", hint: "Mayor rendimiento", icon: "📈", next: "invPermanentes" }
+    ]
+  },
+
+  invTemporales: {
+    result: {
+      name: "Inversiones Temporales",
+      icon: "📊",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Acciones y valores de inmediata realización para obtener rendimiento a corto plazo.",
+      aumenta: "Adquirir acciones, bonos, CETES",
+      disminuye: "Venderlos",
+      example: "Mía compra CETES a 90 días por $10,000. Se carga Inversiones Temporales y se abona Bancos."
+    }
+  },
+
+  invPermanentes: {
+    result: {
+      name: "Inversiones Permanentes",
+      icon: "📈",
+      type: "activo",
+      typeLabel: "Activo Fijo",
+      definition: "Acciones y valores convertibles en efectivo en plazo mayor a un año.",
+      aumenta: "Adquirir acciones y valores",
+      disminuye: "Venderlos",
+      example: "Mía invierte $25,000 en acciones a 3 años. Se carga Inversiones Permanentes y se abona Bancos."
+    }
+  },
+
+  gastosDiferidos: {
+    question: "¿Qué tipo de gasto pagaste por anticipado?",
+    icon: "📅",
+    description: "Identifica la naturaleza del gasto diferido",
+    options: [
+      { text: "Investigación y desarrollo", hint: "Nuevos productos/procesos", icon: "🔬", next: "gastosID" },
+      { text: "Etapas preoperativas", hint: "Antes de iniciar operaciones", icon: "🚀", next: "gastosPreop" },
+      { text: "Mercadotecnia / marcas", hint: "Posicionamiento de mercado", icon: "🎯", next: "gastosMerc" },
+      { text: "Organización empresarial", hint: "Servicios profesionales", icon: "📋", next: "gastosOrg" },
+      { text: "Instalación del local", hint: "Acondicionamiento", icon: "🔧", next: "gastosInst" },
+      { text: "Papelería y útiles", hint: "Material de escritorio", icon: "📝", next: "papeleria" },
+      { text: "Propaganda y publicidad", hint: "Volantes, anuncios", icon: "📢", next: "propaganda" },
+      { text: "Seguros pagados", hint: "Primas de seguros", icon: "🛡️", next: "primas" },
+      { text: "Rentas pagadas anticipadas", hint: "Varios meses por adelantado", icon: "🏢", next: "rentasPag" },
+      { text: "Intereses pagados anticipados", hint: "Descontados del préstamo", icon: "💸", next: "interesesPag" }
+    ]
+  },
+
+  gastosID: {
+    result: {
+      name: "Gastos de Investigación y Desarrollo",
+      icon: "🔬",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Gastos en creación de nuevos productos, procesos o servicios con expectativa de comercializarlos.",
+      aumenta: "Efectuar gastos de I+D",
+      disminuye: "Aplicación a resultados de operación",
+      example: "Mía gasta $1,500 en desarrollar nueva receta de salsa. Se carga Gastos I+D y se abona Bancos."
+    }
+  },
+
+  gastosPreop: {
+    result: {
+      name: "Gastos en Etapas Preoperativas",
+      icon: "🚀",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Gastos durante etapa preoperatoria: adquirir equipos, organizar, capacitar personal.",
+      aumenta: "Efectuar gastos preoperatorios",
+      disminuye: "Amortización al iniciar operaciones",
+      example: "Mía gasta $5,000 en cursos antes de abrir. Se carga Gastos Preoperativos y se abona Bancos."
+    }
+  },
+
+  gastosMerc: {
+    result: {
+      name: "Gastos de Mercadotecnia",
+      icon: "🎯",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Gastos para conocer el mercado, crear marcas, publicidad y promociones.",
+      aumenta: "Efectuar gastos de mercadotecnia",
+      disminuye: "Aplicación a resultados y amortización",
+      example: "Mía paga $4,000 por logo y estudio de mercado. Se carga Gastos de Mercadotecnia y se abona Bancos."
+    }
+  },
+
+  gastosOrg: {
+    result: {
+      name: "Gastos de Organización",
+      icon: "📋",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Pagos a profesionales especializados en organización o reorganización de empresas.",
+      aumenta: "Pagar servicios de organización",
+      disminuye: "Aplicación a resultados",
+      example: "Mía paga $4,000 a contador por estructura fiscal. Se carga Gastos de Organización y se abona Bancos."
+    }
+  },
+
+  gastosInst: {
+    result: {
+      name: "Gastos de Instalación",
+      icon: "🔧",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Gastos para acondicionar el local del negocio y darle presentación.",
+      aumenta: "Acondicionar el local",
+      disminuye: "Amortización por uso o tiempo",
+      example: "Mía gasta $8,000 en pintar y poner extractores. Se carga Gastos de Instalación y se abona Bancos."
+    }
+  },
+
+  papeleria: {
+    result: {
+      name: "Papelería y Útiles",
+      icon: "📝",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Material de papelería y objetos de escritorio: papel, bolígrafos, tintas, etc.",
+      aumenta: "Comprar papelería",
+      disminuye: "Uso de materiales (se convierte en gasto)",
+      example: "Mía compra $1,050 en blocs y bolígrafos. Se carga Papelería y se abona Bancos."
+    }
+  },
+
+  propaganda: {
+    result: {
+      name: "Propaganda y Publicidad",
+      icon: "📢",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Medios para dar a conocer actividad, servicio o producto: folletos, anuncios.",
+      aumenta: "Pagar impresión o contratación",
+      disminuye: "Distribución o publicación",
+      example: "Mía paga $2,000 por volantes y anuncio en Facebook. Se carga Propaganda y se abona Bancos."
+    }
+  },
+
+  primas: {
+    result: {
+      name: "Primas de Seguros",
+      icon: "🛡️",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Pagos a aseguradoras para asegurar bienes contra incendios, robos, riesgos.",
+      aumenta: "Pagar primas de seguro",
+      disminuye: "Servicio disfrutado (se convierte en gasto)",
+      example: "Mía paga $3,600 por seguro anual. Se carga Primas de Seguros y se abona Bancos."
+    }
+  },
+
+  rentasPag: {
+    result: {
+      name: "Rentas Pagadas por Anticipado",
+      icon: "🏢",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Rentas mensuales, semestrales o anuales pagadas antes de su vencimiento.",
+      aumenta: "Pagar rentas por anticipado",
+      disminuye: "Tiempo transcurrido (se convierte en gasto)",
+      example: "Mía paga $18,000 por 6 meses de renta. Se carga Rentas Pagadas por Anticipado y se abona Bancos."
+    }
+  },
+
+  interesesPag: {
+    result: {
+      name: "Intereses Pagados por Anticipado",
+      icon: "💸",
+      type: "activo",
+      typeLabel: "Activo Diferido",
+      definition: "Intereses pagados antes del vencimiento de un crédito (descontados del préstamo).",
+      aumenta: "Pagar intereses por anticipado",
+      disminuye: "Tiempo transcurrido (se convierte en gasto)",
+      example: "Mía pide préstamo de $50,000 con $8,000 de intereses descontados. Se cargan Intereses Pagados por Anticipado."
+    }
+  },
+
+  pasivos: {
+    question: "¿Qué tipo de obligación o deuda es?",
+    icon: "💳",
+    description: "Identifica la naturaleza del pasivo",
+    options: [
+      { text: "Gastos devengados no pagados", hint: "Sueldos, luz, agua, renta", icon: "💡", next: "gastosPend" },
+      { text: "Impuestos y cuotas devengadas", hint: "IMSS, SAR, INFONAVIT", icon: "🏛️", next: "impuestosPend" },
+      { text: "Préstamo con garantía hipotecaria", hint: "Con escritura de inmueble", icon: "🏠", next: "acreedoresHip" },
+      { text: "Rentas cobradas por anticipado", hint: "De arrendatario", icon: "📅", next: "rentasCob" },
+      { text: "Intereses cobrados por anticipado", hint: "De deudor", icon: "💹", next: "interesesCob" },
+      { text: "Adeudo por concepto distinto a mercancías", hint: "Préstamos, compra de activo", icon: "👩‍👧", next: "acreedoresDiv" }
+    ]
+  },
+
+  gastosPend: {
+    result: {
+      name: "Gastos Pendientes de Pago",
+      icon: "💡",
+      type: "pasivo",
+      typeLabel: "Pasivo Circulante",
+      definition: "Gastos por servicios devengados pendientes: sueldos, luz, agua, renta, etc.",
+      aumenta: "No pagar servicio devengado",
+      disminuye: "Pagar el adeudo",
+      example: "Mía debe $2,000 de sueldo a Sofía. Se carga Gastos de Venta y se abona Gastos Pendientes de Pago."
+    }
+  },
+
+  impuestosPend: {
+    result: {
+      name: "Impuestos Pendientes de Pago",
+      icon: "🏛️",
+      type: "pasivo",
+      typeLabel: "Pasivo Circulante",
+      definition: "Impuestos devengados pendientes: IMSS, SAR, INFONAVIT, nóminas, predial.",
+      aumenta: "Conocer obligación fiscal",
+      disminuye: "Pagar el adeudo",
+      example: "Mía debe $1,500 de cuota IMSS. Se carga Gastos de Administración y se abona Impuestos Pendientes."
+    }
+  },
+
+  acreedoresHip: {
+    result: {
+      name: "Acreedores Hipotecarios",
+      icon: "🏠",
+      type: "pasivo",
+      typeLabel: "Pasivo a Largo Plazo",
+      definition: "Obligaciones con garantía de escritura de bienes inmuebles (terrenos y edificios).",
+      aumenta: "Recibir préstamo hipotecario",
+      disminuye: "Pagar el préstamo",
+      example: "Mía hipoteca casa y recibe $200,000. Se carga Bancos y se abona Acreedores Hipotecarios."
+    }
+  },
+
+  rentasCob: {
+    result: {
+      name: "Rentas Cobradas por Anticipado",
+      icon: "📅",
+      type: "pasivo",
+      typeLabel: "Pasivo a Largo Plazo",
+      definition: "Rentas cobradas anticipadamente aún no vencidas.",
+      aumenta: "Cobrar rentas por anticipado",
+      disminuye: "Tiempo transcurrido (se convierte en ingreso)",
+      example: "Don Carlos paga $9,000 por 3 meses de renta del patio. Se carga Bancos y se abona Rentas Cobradas por Anticipado."
+    }
+  },
+
+  interesesCob: {
+    result: {
+      name: "Intereses Cobrados por Anticipado",
+      icon: "💹",
+      type: "pasivo",
+      typeLabel: "Pasivo a Largo Plazo",
+      definition: "Intereses cobrados anticipadamente aún no vencidos.",
+      aumenta: "Cobrar intereses por anticipado",
+      disminuye: "Tiempo transcurrido (se convierte en ingreso)",
+      example: "Mía presta $20,000 a Don Ramón y le descuenta $3,000 de intereses. Se abona Intereses Cobrados por Anticipado."
+    }
+  },
+
+  acreedoresDiv: {
+    result: {
+      name: "Acreedores Diversos",
+      icon: "👩‍👧",
+      type: "pasivo",
+      typeLabel: "Pasivo Circulante",
+      definition: "Entidades a quienes se debe por conceptos distintos a compra de mercancías.",
+      aumenta: "Adeudos por otros conceptos (préstamos, compra de activo)",
+      disminuye: "Pagar o devolver valores",
+      example: "La tía de Mía le presta $10,000. Se carga Bancos y se abona Acreedores Diversos."
+    }
+  },
+
+  adeudos: {
+    question: "¿La empresa es quien presta o le deben?",
+    icon: "🤝",
+    description: "Identifica la posición de la empresa",
+    options: [
+      { text: "La empresa prestó dinero o vendió algo que no es mercancía", hint: "Tiene derecho de cobro", icon: "🤝", next: "deudoresDiv" },
+      { text: "La empresa recibió préstamo sin documento", hint: "Tiene obligación de pago", icon: "👩‍👧", next: "acreedoresDiv" },
+      { text: "La empresa recibió documento a su favor", hint: "Pagaré o letra", icon: "📄", next: "docsCobrar" },
+      { text: "La empresa emitió documento a su cargo", hint: "Pagaré o letra", icon: "📝", next: "docsPagar" }
+    ]
+  },
+
+  deudoresDiv: {
+    result: {
+      name: "Deudores Diversos",
+      icon: "🤝",
+      type: "activo",
+      typeLabel: "Activo Circulante",
+      definition: "Entidades que deben por conceptos distintos a venta de mercancías.",
+      aumenta: "Adeudos por otros conceptos (préstamos, ventas de activo)",
+      disminuye: "Pagar o devolver valores",
+      example: "La hermana de Mía le debe $500 por préstamo. Se carga Deudores Diversos y se abona Caja."
+    }
+  }
+};
+
+// ==================== DATOS DE CUENTAS PARA EL MAPA ====================
+const allAccounts = {
+  'activo-circulante': {
+    label: '💵 Activo Circulante',
+    accounts: [
+      { id: 'caja', name: 'Caja', icon: '💵' },
+      { id: 'cajaChica', name: 'Fondo Fijo de Caja Chica', icon: '🪙' },
+      { id: 'bancos', name: 'Bancos', icon: '🏦' },
+      { id: 'invTemporales', name: 'Inversiones Temporales', icon: '📊' },
+      { id: 'clientes', name: 'Clientes', icon: '👥' },
+      { id: 'docsCobrar', name: 'Documentos por Cobrar', icon: '📄' },
+      { id: 'deudoresDiv', name: 'Deudores Diversos', icon: '🤝' },
+      { id: 'anticipoProv', name: 'Anticipo a Proveedores', icon: '💰' }
+    ]
+  },
+  'activo-fijo': {
+    label: '🏠 Activo Fijo',
+    accounts: [
+      { id: 'terrenos', name: 'Terrenos', icon: '🏞️' },
+      { id: 'edificios', name: 'Edificios', icon: '🏠' },
+      { id: 'mobiliario', name: 'Mobiliario y Equipo', icon: '🪑' },
+      { id: 'computo', name: 'Equipo de Cómputo', icon: '💻' },
+      { id: 'reparto', name: 'Equipo de Entrega', icon: '🛵' },
+      { id: 'depositos', name: 'Depósitos en Garantía', icon: '🔐' },
+      { id: 'invPermanentes', name: 'Inversiones Permanentes', icon: '📈' }
+    ]
+  },
+  'activo-diferido': {
+    label: '📊 Activo Diferido',
+    accounts: [
+      { id: 'gastosID', name: 'Gastos de I+D', icon: '🔬' },
+      { id: 'gastosPreop', name: 'Gastos Preoperativos', icon: '🚀' },
+      { id: 'gastosMerc', name: 'Gastos de Mercadotecnia', icon: '🎯' },
+      { id: 'gastosOrg', name: 'Gastos de Organización', icon: '📋' },
+      { id: 'gastosInst', name: 'Gastos de Instalación', icon: '🔧' },
+      { id: 'papeleria', name: 'Papelería y Útiles', icon: '📝' },
+      { id: 'propaganda', name: 'Propaganda y Publicidad', icon: '📢' },
+      { id: 'primas', name: 'Primas de Seguros', icon: '🛡️' },
+      { id: 'rentasPag', name: 'Rentas Pagadas por Anticipado', icon: '🏢' },
+      { id: 'interesesPag', name: 'Intereses Pagados por Anticipado', icon: '💸' }
+    ]
+  },
+  'pasivo-circulante': {
+    label: '🔥 Pasivo Circulante',
+    accounts: [
+      { id: 'proveedores', name: 'Proveedores', icon: '🥩' },
+      { id: 'docsPagar', name: 'Documentos por Pagar', icon: '📝' },
+      { id: 'acreedoresDiv', name: 'Acreedores Diversos', icon: '👩‍👧' },
+      { id: 'anticipoCli', name: 'Anticipo de Clientes', icon: '🎉' },
+      { id: 'gastosPend', name: 'Gastos Pendientes de Pago', icon: '💡' },
+      { id: 'impuestosPend', name: 'Impuestos Pendientes de Pago', icon: '🏛️' }
+    ]
+  },
+  'pasivo-largo-plazo': {
+    label: '🏦 Pasivo a Largo Plazo',
+    accounts: [
+      { id: 'acreedoresHip', name: 'Acreedores Hipotecarios', icon: '🏠' },
+      { id: 'rentasCob', name: 'Rentas Cobradas por Anticipado', icon: '📅' },
+      { id: 'interesesCob', name: 'Intereses Cobrados por Anticipado', icon: '💹' }
+    ]
+  }
+};
+
+// ==================== ESTADO DE LA APLICACIÓN ====================
+let currentPath = [];
+let currentNode = 'start';
+
+// ==================== FUNCIONES DEL ASISTENTE ====================
+function renderAssistant() {
+  const content = document.getElementById('assistantContent');
+  
+  if (currentNode === 'start' && currentPath.length === 0) {
+    content.innerHTML = `
+      <div class="start-screen">
+        <div class="big-icon">🌳</div>
+        <h2>¿Qué cuenta contable debo usar?</h2>
+        <div class="description">
+          Este asistente te ayudará a identificar la cuenta correcta paso a paso. 
+          Responderás algunas preguntas simples y al final te diremos exactamente 
+          qué cuenta usar, con su definición y un ejemplo práctico.
+        </div>
+        <button class="start-btn" onclick="startAssistant()">
+          🚀 Comenzar
+        </button>
+        <div class="features-grid">
+          <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h4>Preciso</h4>
+            <p>Te guía hasta la cuenta exacta</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">📚</div>
+            <h4>Educativo</h4>
+            <p>Aprende el porqué de cada cuenta</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h4>Rápido</h4>
+            <p>3-5 preguntas máximo</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">🔄</div>
+            <h4>Flexible</h4>
+            <p>Regresa y corrige el camino</p>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  const node = decisionTree[currentNode];
+  
+  // Si es resultado
+  if (node.result) {
+    renderResult(node.result);
+    return;
+  }
+  
+  // Si es pregunta
+  let breadcrumbHTML = '';
+  if (currentPath.length > 0) {
+    breadcrumbHTML = '<div class="breadcrumb">';
+    breadcrumbHTML += '<span style="color:#666; font-size:0.85em;">📍 Tu camino:</span>';
+    currentPath.forEach((p, idx) => {
+      const n = decisionTree[p];
+      breadcrumbHTML += `<span class="breadcrumb-item">${n.icon || '📌'} ${n.question ? 'Pregunta ' + (idx+1) : n.result.name}</span>`;
+    });
+    breadcrumbHTML += '</div>';
+  }
+  
+  let optionsHTML = '';
+  node.options.forEach((opt, idx) => {
+    optionsHTML += `
+      <button class="option-btn" onclick="selectOption('${opt.next}', '${opt.text.replace(/'/g, "\\'")}')">
+        <span class="option-icon">${opt.icon}</span>
+        <span class="option-text">
+          <strong>${opt.text}</strong>
+          <span>${opt.hint}</span>
+        </span>
+      </button>
+    `;
+  });
+  
+  content.innerHTML = `
+    ${breadcrumbHTML}
+    <div class="question-box">
+      <div class="question-icon">${node.icon}</div>
+      <h3>${node.question}</h3>
+      <p>${node.description}</p>
+    </div>
+    <div class="options-grid">
+      ${optionsHTML}
+    </div>
+    <div class="action-buttons">
+      <button class="action-btn back" onclick="goBack()" ${currentPath.length === 0 ? 'disabled' : ''}>
+        ← Regresar
+      </button>
+      <button class="action-btn restart" onclick="restartAssistant()">
+        🔄 Reiniciar
+      </button>
+    </div>
+  `;
+}
+
+function renderResult(result) {
+  const content = document.getElementById('assistantContent');
+  
+  let breadcrumbHTML = '<div class="breadcrumb">';
+  breadcrumbHTML += '<span style="color:#666; font-size:0.85em;">✅ Resultado:</span>';
+  currentPath.forEach((p, idx) => {
+    const n = decisionTree[p];
+    breadcrumbHTML += `<span class="breadcrumb-item">${n.icon || '📌'} Paso ${idx+1}</span>`;
+  });
+  breadcrumbHTML += `<span class="breadcrumb-item" style="background:#ff9800; color:white; border-color:#ff9800;">🎯 ${result.name}</span>`;
+  breadcrumbHTML += '</div>';
+  
+  content.innerHTML = `
+    ${breadcrumbHTML}
+    <div class="result-box">
+      <div class="result-icon">${result.icon}</div>
+      <h2>${result.name}</h2>
+      <span class="account-type type-${result.type}">${result.typeLabel}</span>
+      
+      <div class="result-details">
+        <h4>📖 Definición</h4>
+        <p>${result.definition}</p>
+        
+        <h4>📈 Movimientos</h4>
+        <div class="movement-row">
+          <div class="movement-badge aumenta">
+            <strong>Aumenta por:</strong>
+            ${result.aumenta}
+          </div>
+          <div class="movement-badge disminuye">
+            <strong>Disminuye por:</strong>
+            ${result.disminuye}
+          </div>
+        </div>
+        
+        <div class="example-box">
+          <strong>🍳 Ejemplo práctico</strong>
+          ${result.example}
+        </div>
+      </div>
+    </div>
+    
+    <div class="action-buttons">
+      <button class="action-btn back" onclick="goBack()">
+        ← Regresar
+      </button>
+      <button class="action-btn restart" onclick="restartAssistant()">
+        🔄 Nueva consulta
+      </button>
+    </div>
+    
+    <div class="keyboard-hint">
+      💡 <strong>Tip:</strong> Usa <kbd>←</kbd> para regresar, <kbd>R</kbd> para reiniciar
+    </div>
+  `;
+}
+
+function startAssistant() {
+  currentNode = 'start';
+  currentPath = [];
+  renderAssistant();
+  // Avanzar automáticamente a la primera pregunta
+  setTimeout(() => {
+    currentPath.push('start');
+    currentNode = decisionTree.start.options[0].next;
+    // En realidad debemos mostrar la primera pregunta
+    currentNode = 'start';
+    currentPath = [];
+    // Mostrar primera pregunta directamente
+    currentPath.push('start');
+    const firstQuestion = Object.keys(decisionTree).find(k => decisionTree[k].question && k !== 'start');
+    // Mejor: mostrar start y que el usuario elija
+    renderAssistant();
+  }, 100);
+}
+
+function selectOption(nextNode, optionText) {
+  currentPath.push(currentNode);
+  currentNode = nextNode;
+  renderAssistant();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  if (currentPath.length > 0) {
+    currentNode = currentPath.pop();
+    renderAssistant();
+  }
+}
+
+function restartAssistant() {
+  currentNode = 'start';
+  currentPath = [];
+  renderAssistant();
+}
+
+// ==================== MODO MAPA ====================
+function renderMap() {
+  const container = document.getElementById('mapCategories');
+  container.innerHTML = '';
+  
+  Object.keys(allAccounts).forEach(catKey => {
+    const cat = allAccounts[catKey];
+    let accountsHTML = '';
+    
+    cat.accounts.forEach(acc => {
+      accountsHTML += `
+        <div class="map-account" onclick="showAccountDetail('${acc.id}')">
+          <span class="acc-icon">${acc.icon}</span>
+          <span class="acc-name">${acc.name}</span>
+          <span class="acc-hint">Ver →</span>
+        </div>
+      `;
+    });
+    
+    container.innerHTML += `
+      <div class="map-category ${catKey}">
+        <div class="map-category-header">
+          ${cat.label}
+        </div>
+        <div class="map-category-body">
+          ${accountsHTML}
+        </div>
+      </div>
+    `;
+  });
+}
+
+function showAccountDetail(accountId) {
+  const node = decisionTree[accountId];
+  if (!node || !node.result) return;
+  
+  const result = node.result;
+  
+  document.getElementById('modalIcon').textContent = result.icon;
+  document.getElementById('modalTitle').textContent = result.name;
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div style="text-align:center; margin-bottom:15px;">
+      <span class="account-type type-${result.type}">${result.typeLabel}</span>
+    </div>
+    <h4 style="color:#134e5e; margin-bottom:8px;">📖 Definición</h4>
+    <p style="line-height:1.6; color:#555; margin-bottom:15px;">${result.definition}</p>
+    
+    <h4 style="color:#134e5e; margin-bottom:8px;">📈 Movimientos</h4>
+    <div class="movement-row">
+      <div class="movement-badge aumenta">
+        <strong>Aumenta por:</strong>
+        ${result.aumenta}
+      </div>
+      <div class="movement-badge disminuye">
+        <strong>Disminuye por:</strong>
+        ${result.disminuye}
+      </div>
+    </div>
+    
+    <div class="example-box">
+      <strong>🍳 Ejemplo práctico</strong>
+      ${result.example}
+    </div>
+  `;
+  
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ==================== CAMBIO DE MODO ====================
+function switchMode(mode) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  document.getElementById('assistantMode').classList.remove('active');
+  document.getElementById('mapMode').classList.remove('active');
+  
+  if (mode === 'assistant') {
+    document.getElementById('assistantMode').classList.add('active');
+    renderAssistant();
+  } else {
+    document.getElementById('mapMode').classList.add('active');
+    renderMap();
+  }
+}
+
+// ==================== ATAJOS DE TECLADO ====================
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+    if (document.getElementById('assistantMode').classList.contains('active')) {
+      e.preventDefault();
+      goBack();
+    }
+  }
+  if (e.key === 'r' || e.key === 'R') {
+    if (document.getElementById('assistantMode').classList.contains('active')) {
+      restartAssistant();
+    }
+  }
+});
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+// Inicializar
+renderAssistant();
+</script>
+</body>
+</html>

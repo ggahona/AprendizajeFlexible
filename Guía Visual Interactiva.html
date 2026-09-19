@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Guía Visual de Cuentas - Activo y Pasivo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container {
+    max-width: 1300px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+  }
+
+  .header h1 { font-size: 2.2em; margin-bottom: 10px; }
+  .header p { opacity: 0.9; font-size: 1.1em; }
+
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .stat-item {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  }
+
+  .stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2a5298;
+  }
+
+  .stat-label {
+    font-size: 0.85em;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .controls {
+    padding: 25px 30px;
+    background: white;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .search-box {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 15px 20px 15px 50px;
+    border: 2px solid #e0e0e0;
+    border-radius: 30px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+  }
+
+  .search-box input:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 0 3px rgba(42,82,152,0.1);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.3em;
+    color: #999;
+  }
+
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .filter-btn {
+    padding: 10px 20px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    color: #555;
+  }
+
+  .filter-btn:hover {
+    border-color: #2a5298;
+    color: #2a5298;
+    transform: translateY(-2px);
+  }
+
+  .filter-btn.active {
+    background: linear-gradient(135deg, #2a5298, #1e3c72);
+    color: white;
+    border-color: transparent;
+  }
+
+  .filter-btn .count {
+    display: inline-block;
+    background: rgba(255,255,255,0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.85em;
+    margin-left: 5px;
+  }
+
+  .filter-btn.active .count {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .accounts-grid {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .account-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+
+  .account-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-color: #2a5298;
+  }
+
+  .account-card.hidden {
+    display: none;
+  }
+
+  .card-header {
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .card-icon {
+    font-size: 2.5em;
+    background: rgba(255,255,255,0.2);
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    flex: 1;
+  }
+
+  .card-title h3 {
+    font-size: 1.2em;
+    margin-bottom: 3px;
+  }
+
+  .card-title .category {
+    font-size: 0.8em;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Colores por categoría */
+  .cat-activo-circulante .card-header { background: linear-gradient(135deg, #11998e, #38ef7d); }
+  .cat-activo-fijo .card-header { background: linear-gradient(135deg, #2193b0, #6dd5ed); }
+  .cat-activo-diferido .card-header { background: linear-gradient(135deg, #f2994a, #f2c94c); }
+  .cat-pasivo-circulante .card-header { background: linear-gradient(135deg, #eb3349, #f45c43); }
+  .cat-pasivo-largo-plazo .card-header { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .card-body .definition {
+    font-size: 0.9em;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .movement-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .movement-badge {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .movement-badge.aumenta {
+    background: #d4edda;
+    color: #155724;
+    border-left: 3px solid #28a745;
+  }
+
+  .movement-badge.disminuye {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 3px solid #dc3545;
+  }
+
+  .movement-badge .label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.4s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 30px;
+    color: white;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+  }
+
+  .modal-header .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .modal-header .close-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(90deg);
+  }
+
+  .modal-header h2 {
+    font-size: 2em;
+    margin-bottom: 5px;
+  }
+
+  .modal-header .category-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .modal-body {
+    padding: 30px;
+  }
+
+  .modal-section {
+    margin-bottom: 25px;
+  }
+
+  .modal-section h4 {
+    color: #2a5298;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-section p {
+    line-height: 1.7;
+    color: #555;
+    font-size: 0.95em;
+  }
+
+  .movement-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .movement-box {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .movement-box.aumenta {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border-left: 5px solid #28a745;
+  }
+
+  .movement-box.disminuye {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border-left: 5px solid #dc3545;
+  }
+
+  .movement-box h5 {
+    margin-bottom: 8px;
+    font-size: 1em;
+  }
+
+  .movement-box.aumenta h5 { color: #155724; }
+  .movement-box.disminuye h5 { color: #721c24; }
+
+  .movement-box p {
+    font-size: 0.9em;
+    line-height: 1.5;
+  }
+
+  .rule-box {
+    background: linear-gradient(135deg, #fff3cd, #ffe69c);
+    border-left: 5px solid #ffc107;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+
+  .rule-box strong {
+    color: #856404;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    grid-column: 1 / -1;
+  }
+
+  .no-results .icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+  }
+
+  @media (max-width: 768px) {
+    .header h1 { font-size: 1.5em; }
+    .accounts-grid { grid-template-columns: 1fr; padding: 20px; }
+    .movement-detail { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📊 Guía Visual de Cuentas Contables</h1>
+    <p>Activo y Pasivo · Consulta interactiva completa</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-number" id="totalAccounts">35</div>
+      <div class="stat-label">Total de cuentas</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="activoCount">26</div>
+      <div class="stat-label">Cuentas de Activo</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="pasivoCount">9</div>
+      <div class="stat-label">Cuentas de Pasivo</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="visibleCount">35</div>
+      <div class="stat-label">Mostrando</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Buscar cuenta por nombre o concepto...">
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn active" data-filter="all">Todas <span class="count" id="countAll">35</span></button>
+      <button class="filter-btn" data-filter="activo-circulante">💵 Activo Circulante <span class="count" id="countAC">9</span></button>
+      <button class="filter-btn" data-filter="activo-fijo">🏠 Activo Fijo <span class="count" id="countAF">7</span></button>
+      <button class="filter-btn" data-filter="activo-diferido">📊 Activo Diferido <span class="count" id="countAD">10</span></button>
+      <button class="filter-btn" data-filter="pasivo-circulante">🔥 Pasivo Circulante <span class="count" id="countPC">6</span></button>
+      <button class="filter-btn" data-filter="pasivo-largo-plazo">🏦 Pasivo Largo Plazo <span class="count" id="countPL">3</span></button>
+    </div>
+  </div>
+
+  <div class="accounts-grid" id="accountsGrid"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header" id="modalHeader">
+      <button class="close-btn" onclick="closeModal()">×</button>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div class="card-icon" id="modalIcon"></div>
+        <div>
+          <h2 id="modalTitle"></h2>
+          <div class="category-label" id="modalCategory"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h4>📖 Definición</h4>
+        <p id="modalDefinition"></p>
+      </div>
+      <div class="modal-section">
+        <h4>📈 Movimientos</h4>
+        <div class="movement-detail">
+          <div class="movement-box aumenta">
+            <h5>📈 Aumenta por</h5>
+            <p id="modalAumenta"></p>
+          </div>
+          <div class="movement-box disminuye">
+            <h5>📉 Disminuye por</h5>
+            <p id="modalDisminuye"></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-section">
+        <h4>⚖️ Naturaleza</h4>
+        <p id="modalNaturaleza"></p>
+      </div>
+      <div class="rule-box">
+        <strong>💡 Regla contable</strong>
+        <span id="modalRule"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const accounts = [
+  // ACTIVO CIRCULANTE
+  { name: 'Caja', icon: '💵', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Dinero en efectivo propiedad de la empresa, representado por monedas, billetes, cheques, pagarés (vouchers) de tarjetas de crédito, giros postales, bancarios y telegráficos.',
+    aumenta: 'Cuando recibe dinero en efectivo por ventas, cobros, etc.',
+    disminuye: 'Cuando paga con dinero en efectivo gastos, compras, etc.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Fondo Fijo de Caja Chica', icon: '🪙', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Dinero en efectivo destinado para liquidar pagos menores. La LISR establece que no debe exceder de $2,000.00.',
+    aumenta: 'Cuando el fondo, por no ser suficiente, se incremente.',
+    disminuye: 'Cuando el fondo, por ser excesivo, se reduzca.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Bancos', icon: '🏦', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Valor de los depósitos hechos en instituciones bancarias a favor de la entidad.',
+    aumenta: 'Cuando deposita dinero o valores al cobro.',
+    disminuye: 'Cuando expide cheques o hace transferencias.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Inversiones Temporales', icon: '📊', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Acciones y valores de inmediata realización adquiridos con el propósito de obtener rendimiento a corto plazo.',
+    aumenta: 'Cuando adquiere acciones, bonos, CETES, etc.',
+    disminuye: 'Cuando los vende.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Mercancías', icon: '🌮', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Valores que se hacen objeto de compra o venta. Es cuenta de activo solo al principio y al final del ejercicio.',
+    aumenta: 'Cuando compra mercancías o le devuelven.',
+    disminuye: 'Cuando vende mercancías o las devuelve.',
+    naturaleza: 'Cuenta de Activo (mixta durante el ejercicio)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Clientes', icon: '👥', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Entidades que deben a la empresa por ventas de mercancías a crédito sin garantía documental.',
+    aumenta: 'Cuando vende mercancías a crédito.',
+    disminuye: 'Cuando pagan, devuelven mercancías o se les concede descuento.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Documentos por Cobrar', icon: '📄', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Títulos de crédito a favor de la entidad, como letras de cambio y pagarés.',
+    aumenta: 'Cuando recibe letras o pagarés a su favor.',
+    disminuye: 'Cuando cobra, endosa o cancela estos documentos.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Deudores Diversos', icon: '🤝', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Entidades que deben a la empresa por conceptos distintos a la venta de mercancías.',
+    aumenta: 'Cuando le quedan a deber por conceptos distintos a venta de mercancías.',
+    disminuye: 'Cuando pagan o devuelven valores.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Anticipo a Proveedores', icon: '💰', category: 'activo-circulante', categoryLabel: 'Activo Circulante',
+    definition: 'Valor del anticipo a cuenta de pedidos entregado a proveedores para asegurar el suministro oportuno.',
+    aumenta: 'Cuando efectúa anticipos a proveedores.',
+    disminuye: 'Cuando se amortiza o cancela al recibir el pedido.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+
+  // ACTIVO FIJO
+  { name: 'Terrenos', icon: '🏞️', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Predios propiedad de la entidad.',
+    aumenta: 'Cuando compra un terreno.',
+    disminuye: 'Cuando vende o da de baja.',
+    naturaleza: 'Cuenta de Activo Fijo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Edificios', icon: '🏢', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Propiedades fijas como locales comerciales, bodegas, estacionamientos, etc.',
+    aumenta: 'Cuando compra un edificio.',
+    disminuye: 'Cuando vende o da de baja.',
+    naturaleza: 'Cuenta de Activo Fijo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Mobiliario y Equipo', icon: '🪑', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Conjunto de muebles y utensilios: escritorios, sillas, mesas, básculas, máquinas de oficina, etc.',
+    aumenta: 'Cuando compra estos bienes.',
+    disminuye: 'Cuando vende o da de baja.',
+    naturaleza: 'Cuenta de Activo Fijo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Equipo de Cómputo Electrónico', icon: '💻', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Conjunto de CPU, monitores, teclados, impresoras, scanners, plotters, etc.',
+    aumenta: 'Cuando compra equipo de cómputo.',
+    disminuye: 'Cuando vende o da de baja.',
+    naturaleza: 'Cuenta de Activo Fijo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Equipo de Entrega o Reparto', icon: '🛵', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Vehículos de transporte: aviones, camiones, camionetas, motocicletas, barcos, etc.',
+    aumenta: 'Cuando compra un vehículo.',
+    disminuye: 'Cuando vende o da de baja.',
+    naturaleza: 'Cuenta de Activo Fijo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Depósitos en Garantía', icon: '🔐', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Cantidades dejadas en guarda para garantizar valores o servicios (ej. arrendamiento).',
+    aumenta: 'Cuando deja en guarda dinero o valores.',
+    disminuye: 'Conforme le devuelvan el importe al terminar el contrato.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Inversiones Permanentes', icon: '📈', category: 'activo-fijo', categoryLabel: 'Activo Fijo',
+    definition: 'Acciones y valores convertibles en efectivo en plazo mayor a un año, para obtener mayor rendimiento.',
+    aumenta: 'Cuando adquiere acciones y valores.',
+    disminuye: 'Cuando los vende.',
+    naturaleza: 'Cuenta de Activo',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+
+  // ACTIVO DIFERIDO
+  { name: 'Gastos de Investigación y Desarrollo', icon: '🔬', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos en la creación de nuevos productos, procesos o servicios con expectativa de comercializarlos.',
+    aumenta: 'Cuando efectúa gastos de I+D.',
+    disminuye: 'Por aplicación a resultados de operación.',
+    naturaleza: 'Cuenta de Activo Diferido (solo si hay costos pendientes de aplicación futura)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Gastos en Etapas Preoperativas', icon: '🚀', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos durante la etapa preoperatoria para iniciar operaciones: equipos, organización, capacitación.',
+    aumenta: 'Cuando efectúa gastos en etapa preoperatoria.',
+    disminuye: 'Por amortización al dejar la etapa preoperatoria.',
+    naturaleza: 'Cuenta de Activo Diferido',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Gastos de Mercadotecnia', icon: '🎯', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos para conocer el mercado, darlo a conocer, desarrollarlo o mantener la preferencia del consumidor.',
+    aumenta: 'Cuando efectúa gastos de mercadotecnia.',
+    disminuye: 'Por aplicación a resultados y amortización de marcas.',
+    naturaleza: 'Cuenta de Activo Diferido (solo la parte pendiente de aplicación futura)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Gastos de Organización', icon: '📋', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Pagos a profesionales especializados en organización o reorganización de empresas.',
+    aumenta: 'Cuando paga servicios de organización.',
+    disminuye: 'Por aplicación a resultados de operación.',
+    naturaleza: 'Cuenta de Activo Diferido (solo la parte pendiente de aplicación futura)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Gastos de Instalación', icon: '🔧', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Gastos para acondicionar el local del negocio y darle comodidad y presentación.',
+    aumenta: 'Por cada gasto para acondicionar el local.',
+    disminuye: 'Por la parte proporcional que se vaya amortizando.',
+    naturaleza: 'Cuenta de Activo Diferido',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Papelería y Útiles', icon: '📝', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Material de papelería y objetos de escritorio: papel, sobres, lápices, bolígrafos, tintas, etc.',
+    aumenta: 'Cuando compra papelería y útiles.',
+    disminuye: 'Por el valor de los materiales que se vayan utilizando.',
+    naturaleza: 'Cuenta de Activo (la parte consumida es gasto)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Propaganda y Publicidad', icon: '📢', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Medios para dar a conocer al público actividad, servicio o producto: folletos, volantes, anuncios.',
+    aumenta: 'Cuando paga por impresión o contratación de propaganda.',
+    disminuye: 'Por la parte que se distribuya o publique.',
+    naturaleza: 'Cuenta de Activo Diferido (la parte distribuida es gasto)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Primas de Seguros', icon: '🛡️', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Pagos a compañías aseguradoras para asegurar bienes contra incendios, riesgos, robos, etc.',
+    aumenta: 'Cuando paga primas sobre contratos de seguro.',
+    disminuye: 'Por la parte proporcional disfrutada del servicio.',
+    naturaleza: 'Cuenta de Activo Diferido (la parte disfrutada es gasto)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Rentas Pagadas por Anticipado', icon: '🏢', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Importe de rentas mensuales, semestrales o anuales pagadas anticipadamente.',
+    aumenta: 'Cuando paga por anticipado varias rentas.',
+    disminuye: 'Por la parte proporcional disfrutada en el tiempo.',
+    naturaleza: 'Cuenta de Activo Diferido (la parte disfrutada es gasto)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+  { name: 'Intereses Pagados por Anticipado', icon: '💸', category: 'activo-diferido', categoryLabel: 'Activo Diferido',
+    definition: 'Intereses pagados antes del vencimiento de un crédito (descontados del préstamo).',
+    aumenta: 'Cuando paga intereses por anticipado.',
+    disminuye: 'Por la parte proporcional convertida en gasto por el tiempo.',
+    naturaleza: 'Cuenta de Activo Diferido (la parte disminuida es gasto)',
+    rule: 'El ACTIVO aumenta por el CARGO y disminuye por el ABONO.' },
+
+  // PASIVO CIRCULANTE
+  { name: 'Proveedores', icon: '🥩', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Entidades a quienes se debe por compras de mercancías a crédito sin garantía documental.',
+    aumenta: 'Cuando compra mercancías a crédito.',
+    disminuye: 'Cuando paga, devuelve mercancías o recibe descuentos.',
+    naturaleza: 'Cuenta de Pasivo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Documentos por Pagar', icon: '📝', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Títulos de crédito a cargo de la empresa, como letras de cambio y pagarés.',
+    aumenta: 'Cuando expide letras o pagarés a su cargo.',
+    disminuye: 'Cuando paga o cancela estos documentos.',
+    naturaleza: 'Cuenta de Pasivo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Acreedores Diversos', icon: '👩‍👧', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Entidades a quienes se debe por conceptos distintos a la compra de mercancías.',
+    aumenta: 'Cuando queda a deber por conceptos distintos a mercancías.',
+    disminuye: 'Cuando paga o devuelve valores.',
+    naturaleza: 'Cuenta de Pasivo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Anticipo de Clientes', icon: '🎉', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Valor del anticipo recibido de clientes a cuenta de futuras ventas de mercancías.',
+    aumenta: 'Cuando recibe anticipos de clientes.',
+    disminuye: 'Cuando entrega el pedido o devuelve el anticipo.',
+    naturaleza: 'Cuenta de Pasivo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Gastos Pendientes de Pago', icon: '💡', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Gastos por servicios devengados pendientes de pago: sueldos, comisiones, luz, agua, renta, etc.',
+    aumenta: 'Cuando no paga algún servicio ya devengado.',
+    disminuye: 'Cuando paga total o parcialmente el adeudo.',
+    naturaleza: 'Cuenta de Pasivo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Impuestos Pendientes de Pago', icon: '🏛️', category: 'pasivo-circulante', categoryLabel: 'Pasivo Circulante',
+    definition: 'Impuestos generados devengados pendientes de pago: IMSS, SAR, INFONAVIT, nóminas, predial.',
+    aumenta: 'Cuando se conoce la obligación de pagar algún impuesto.',
+    disminuye: 'Cuando paga total o parcialmente el adeudo.',
+    naturaleza: 'Cuenta de Pasivo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+
+  // PASIVO LARGO PLAZO
+  { name: 'Acreedores Hipotecarios', icon: '🏠', category: 'pasivo-largo-plazo', categoryLabel: 'Pasivo a Largo Plazo',
+    definition: 'Obligaciones con garantía de escritura de bienes inmuebles (terrenos y edificios).',
+    aumenta: 'Cuando recibe préstamos con garantía hipotecaria.',
+    disminuye: 'Por los pagos a cuenta o liquidación del préstamo.',
+    naturaleza: 'Cuenta de Pasivo a Largo Plazo',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Rentas Cobradas por Anticipado', icon: '📅', category: 'pasivo-largo-plazo', categoryLabel: 'Pasivo a Largo Plazo',
+    definition: 'Importe de rentas cobradas anticipadamente aún no vencidas.',
+    aumenta: 'Cuando cobra rentas por anticipado.',
+    disminuye: 'Por la parte proporcional devengada conforme al tiempo.',
+    naturaleza: 'Cuenta de Pasivo (la parte devengada es ingreso)',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' },
+  { name: 'Intereses Cobrados por Anticipado', icon: '💹', category: 'pasivo-largo-plazo', categoryLabel: 'Pasivo a Largo Plazo',
+    definition: 'Importe de intereses cobrados anticipadamente aún no vencidos.',
+    aumenta: 'Cuando cobra intereses por anticipado.',
+    disminuye: 'Por la parte proporcional convertida en ingreso.',
+    naturaleza: 'Cuenta de Pasivo (la parte disminuida es ingreso)',
+    rule: 'El PASIVO aumenta por el ABONO y disminuye por el CARGO.' }
+];
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+function renderAccounts() {
+  const grid = document.getElementById('accountsGrid');
+  grid.innerHTML = '';
+  
+  const filtered = accounts.filter(acc => {
+    const matchFilter = currentFilter === 'all' || acc.category === currentFilter;
+    const matchSearch = currentSearch === '' || 
+      acc.name.toLowerCase().includes(currentSearch.toLowerCase()) ||
+      acc.definition.toLowerCase().includes(currentSearch.toLowerCase()) ||
+      acc.categoryLabel.toLowerCase().includes(currentSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="no-results">
+        <div class="icon">🔍</div>
+        <h3>No se encontraron cuentas</h3>
+        <p>Intenta con otro término o filtro</p>
+      </div>
+    `;
+  } else {
+    filtered.forEach((acc, idx) => {
+      const card = document.createElement('div');
+      card.className = `account-card cat-${acc.category}`;
+      card.onclick = () => openModal(acc);
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-icon">${acc.icon}</div>
+          <div class="card-title">
+            <h3>${acc.name}</h3>
+            <div class="category">${acc.categoryLabel}</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="definition">${acc.definition}</div>
+          <div class="movement-row">
+            <div class="movement-badge aumenta">
+              <span class="label">Aumenta</span>
+              ${acc.category.startsWith('activo') ? 'Cargo' : 'Abono'}
+            </div>
+            <div class="movement-badge disminuye">
+              <span class="label">Disminuye</span>
+              ${acc.category.startsWith('activo') ? 'Abono' : 'Cargo'}
+            </div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+  
+  document.getElementById('visibleCount').textContent = filtered.length;
+}
+
+function openModal(acc) {
+  const modal = document.getElementById('modalOverlay');
+  const header = document.getElementById('modalHeader');
+  header.className = `modal-header cat-${acc.category}`;
+  // Aplicar el gradiente del header
+  const gradients = {
+    'activo-circulante': 'linear-gradient(135deg, #11998e, #38ef7d)',
+    'activo-fijo': 'linear-gradient(135deg, #2193b0, #6dd5ed)',
+    'activo-diferido': 'linear-gradient(135deg, #f2994a, #f2c94c)',
+    'pasivo-circulante': 'linear-gradient(135deg, #eb3349, #f45c43)',
+    'pasivo-largo-plazo': 'linear-gradient(135deg, #8e2de2, #4a00e0)'
+  };
+  header.style.background = gradients[acc.category];
+  
+  document.getElementById('modalIcon').textContent = acc.icon;
+  document.getElementById('modalTitle').textContent = acc.name;
+  document.getElementById('modalCategory').textContent = acc.categoryLabel;
+  document.getElementById('modalDefinition').textContent = acc.definition;
+  document.getElementById('modalAumenta').textContent = acc.aumenta;
+  document.getElementById('modalDisminuye').textContent = acc.disminuye;
+  document.getElementById('modalNaturaleza').textContent = acc.naturaleza;
+  document.getElementById('modalRule').textContent = acc.rule;
+  
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// Filtros
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderAccounts();
+  });
+});
+
+// Búsqueda
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  currentSearch = e.target.value;
+  renderAccounts();
+});
+
+// Cerrar modal con click fuera
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// Inicializar
+renderAccounts();
+</script>
+</body>
+</html>
