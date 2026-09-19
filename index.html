@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Materiales de Estudio - Aprendizaje Flexible</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 25px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 40px 30px;
+    text-align: center;
+  }
+  .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+  .header p { opacity: 0.9; font-size: 1.2em; }
+  .content { padding: 40px 30px; }
+  .intro {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+    border-left: 5px solid #2a5298;
+  }
+  .intro h2 { color: #1e3c72; margin-bottom: 10px; }
+  .intro p { color: #555; line-height: 1.6; }
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .resource-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: #333;
+    display: block;
+  }
+  .resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-color: #2a5298;
+  }
+  .resource-icon { font-size: 3em; margin-bottom: 15px; }
+  .resource-card h3 { color: #1e3c72; margin-bottom: 10px; font-size: 1.3em; }
+  .resource-card p { color: #666; font-size: 0.95em; line-height: 1.5; }
+  .resource-tag {
+    display: inline-block;
+    background: #2a5298;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-top: 10px;
+  }
+  .footer {
+    background: #f8f9fa;
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    border-top: 2px solid #e9ecef;
+  }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.8em; }
+    .resources-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📚 Materiales de Estudio</h1>
+    <p>Aprendizaje Flexible - Contabilidad</p>
+  </div>
+  <div class="content">
+    <div class="intro">
+      <h2>¡Bienvenido!</h2>
+      <p>Selecciona un recurso para comenzar a estudiar. Todos los materiales son interactivos y funcionan en cualquier dispositivo.</p>
+    </div>
+    <div class="resources-grid">
+      <a href="guia-visual.html" class="resource-card">
+        <div class="resource-icon">📊</div>
+        <h3>Guía Visual de Cuentas</h3>
+        <p>Consulta interactiva con búsqueda y filtros para todas las cuentas del activo y pasivo.</p>
+        <span class="resource-tag">Referencia rápida</span>
+      </a>
+      <a href="Flashcards.html" class="resource-card">
+        <div class="resource-icon">🎴</div>
+        <h3>Flashcards Interactivas</h3>
+        <p>Tarjetas para memorizar las 35 cuentas con modo estudio y modo examen.</p>
+        <span class="resource-tag">Memorización</span>
+      </a>
+      <a href="arbol-decisiones.html" class="resource-card">
+        <div class="resource-icon">🌳</div>
+        <h3>Árbol de Decisiones</h3>
+        <p>Asistente interactivo que te ayuda a identificar qué cuenta usar en cada operación.</p>
+        <span class="resource-tag">Identificación de cuentas</span>
+      </a>
+    </div>
+  </div>
+  <div class="footer">
+    <p>💡 Tip: Usa estos recursos junto con tus clases en línea para maximizar tu aprendizaje.</p>
+  </div>
+</div>
+</body>
+</html>
